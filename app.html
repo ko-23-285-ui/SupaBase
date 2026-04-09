@@ -400,6 +400,82 @@
     .toast-title { font-size:12px; font-weight:700; color:#b0b0ff; margin-bottom:2px; }
     .toast-text  { font-size:11px; color:var(--text2); }
 
+    /* ═══════════════════ МОНИТОР ГРУППЫ ═══════════════════ */
+
+    /* Кнопки статуса */
+    .status-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 14px 16px 16px;
+    }
+    .status-btn {
+      padding: 10px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text2);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .status-btn:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
+    .status-btn.active {
+      border-color: var(--accent);
+      background: rgba(108,99,255,.15);
+      color: var(--text);
+      box-shadow: 0 0 12px rgba(108,99,255,.2);
+    }
+    .status-btn[data-status="Учусь"].active   { border-color:#43e97b; background:rgba(67,233,123,.12); box-shadow:0 0 12px rgba(67,233,123,.2); }
+    .status-btn[data-status="Кофе"].active    { border-color:#ffd166; background:rgba(255,209,102,.12); box-shadow:0 0 12px rgba(255,209,102,.2); }
+    .status-btn[data-status="В игре"].active  { border-color:#6c63ff; background:rgba(108,99,255,.15); box-shadow:0 0 12px rgba(108,99,255,.2); }
+    .status-btn[data-status="Дома"].active    { border-color:#ff6584; background:rgba(255,101,132,.12); box-shadow:0 0 12px rgba(255,101,132,.2); }
+
+    /* Список группы */
+    .gm-list { padding: 4px 8px 12px; }
+    .gm-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      transition: background .15s;
+    }
+    .gm-item:hover { background: var(--bg3); }
+    .gm-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: pulse 2s infinite;
+    }
+    .gm-av {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .gm-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .gm-info { flex: 1; min-width: 0; }
+    .gm-name {
+      font-size: 13px; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .gm-you {
+      font-size: 10px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-left: 4px;
+    }
+    .gm-status { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
     /* ═══════════════════ УТИЛИТЫ ═══════════════════ */
     .spinner {
       width:18px; height:18px;
@@ -471,6 +547,36 @@
 
   <!-- ── ПРАВАЯ КОЛОНКА ── -->
   <div class="right-col">
+
+    <!-- Монитор группы -->
+    <div class="card" style="grid-column: span 2;" id="group-monitor-card">
+      <div class="card-hd">
+        <div class="card-icon" style="background:rgba(108,99,255,.12)">👥</div>
+        <span class="card-title">Монитор группы</span>
+        <div class="card-badge" style="margin-left:auto;">
+          <div class="pulse"></div>
+          <span id="gm-cnt">0</span>
+        </div>
+      </div>
+
+      <!-- Мой статус — кнопки -->
+      <div style="padding:12px 16px 0; border-bottom:1px solid var(--border);">
+        <div style="font-size:11px;color:var(--text2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">
+          Мой статус
+        </div>
+        <div class="status-btns" style="padding:0 0 14px 0;">
+          <button class="status-btn active" data-status="Учусь"  onclick="setMyStatus('Учусь')">📖 Учусь</button>
+          <button class="status-btn"        data-status="Кофе"   onclick="setMyStatus('Кофе')">☕ Кофе</button>
+          <button class="status-btn"        data-status="В игре" onclick="setMyStatus('В игре')">🎮 В игре</button>
+          <button class="status-btn"        data-status="Дома"   onclick="setMyStatus('Дома')">🏠 Дома</button>
+        </div>
+      </div>
+
+      <!-- Список группы онлайн -->
+      <div class="gm-list" id="group-monitor-list">
+        <div class="spinner"></div>
+      </div>
+    </div>
 
     <!-- Кто онлайн -->
     <div class="card">
@@ -626,6 +732,7 @@ async function init() {
     loadBadges(),
     refreshOnline(),
     refreshRating(),
+    refreshGroupMonitor(),
   ]);
 
   renderSessionBtns();
@@ -639,6 +746,9 @@ async function init() {
 
   /* Онлайн обновляем каждые 30 сек */
   setInterval(refreshOnline, 30_000);
+
+  /* Монитор группы — каждые 30 сек */
+  setInterval(refreshGroupMonitor, 30_000);
 
   /* Рейтинг — каждые 5 минут */
   setInterval(refreshRating, 300_000);
@@ -1006,6 +1116,108 @@ function showToast(ach) {
     </div>`;
   document.getElementById('toasts').appendChild(el);
   setTimeout(() => el.remove(), 5000);
+}
+
+/* ══════════════════════════════════════════════════
+   ФУНКЦИЯ 3: setMyStatus(status)
+   ─────────────────────────────────────────────────
+   Записывает выбранный статус пользователя в БД.
+
+   КАК РАБОТАЕТ:
+   Пользователь нажимает одну из кнопок («Учусь»,
+   «Кофе», «В игре», «Дома»). Функция делает UPDATE
+   в таблице profiles — обновляет поле status и
+   заодно last_seen (чтобы оставаться онлайн).
+   Realtime-подписка автоматически уведомляет
+   всех других пользователей — их монитор группы
+   обновится без перезагрузки страницы.
+   ══════════════════════════════════════════════════ */
+async function setMyStatus(status) {
+  if (!me) return;
+
+  /* UPDATE только нашей строки в profiles */
+  const { error } = await sb.from('profiles')
+    .update({
+      status:    status,
+      last_seen: new Date().toISOString(),
+    })
+    .eq('id', me.id);
+
+  if (error) { console.error('setMyStatus:', error); return; }
+
+  /* Обновляем локальный профиль */
+  if (myProfile) myProfile.status = status;
+
+  /* Подсвечиваем нажатую кнопку */
+  document.querySelectorAll('.status-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === status);
+  });
+
+  /* Сразу обновляем монитор группы у себя */
+  refreshGroupMonitor();
+}
+
+/* ══════════════════════════════════════════════════
+   ФУНКЦИЯ 4: getGroupMonitor()
+   ─────────────────────────────────────────────────
+   Получает список онлайн-пользователей с их
+   текущими статусами для блока «Монитор группы».
+
+   КАК РАБОТАЕТ:
+   Делает SELECT из таблицы profiles, выбирая
+   только тех, у кого last_seen обновлялся в
+   последние 5 минут (значит они сейчас на сайте).
+   Дополнительно берёт поле status — «Учусь»,
+   «Кофе» и т.д. — и отображает рядом с именем.
+   Вызывается каждые 30 секунд и при смене статуса.
+   ══════════════════════════════════════════════════ */
+async function getGroupMonitor() {
+  const since = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const { data, error } = await sb.from('profiles')
+    .select('id, username, avatar_url, status, last_seen')
+    .gt('last_seen', since)              /* только онлайн */
+    .order('username', { ascending: true });
+
+  if (error) { console.error('getGroupMonitor:', error); return []; }
+  return data || [];
+}
+
+async function refreshGroupMonitor() {
+  const users = await getGroupMonitor();
+
+  /* Обновляем счётчик */
+  const cntEl = document.getElementById('gm-cnt');
+  if (cntEl) cntEl.textContent = users.length;
+
+  const el = document.getElementById('group-monitor-list');
+  if (!el) return;
+
+  if (!users.length) {
+    el.innerHTML = '<div class="empty">Никого онлайн</div>';
+    return;
+  }
+
+  const STATUS_ICONS  = { 'Учусь':'📖', 'Кофе':'☕', 'В игре':'🎮', 'Дома':'🏠' };
+  const STATUS_COLORS = { 'Учусь':'#43e97b', 'Кофе':'#ffd166', 'В игре':'#6c63ff', 'Дома':'#ff6584' };
+
+  el.innerHTML = users.map(u => {
+    const icon     = STATUS_ICONS[u.status]  || '🟡';
+    const color    = STATUS_COLORS[u.status] || '#7070a0';
+    const initials = (u.username || '?').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+    const isMe     = u.id === me?.id;
+    return `
+      <div class="gm-item">
+        <div class="gm-dot" style="background:${color}"></div>
+        <div class="gm-av">${u.avatar_url
+          ? `<img src="${u.avatar_url}" alt="" onerror="this.style.display='none'">`
+          : initials}</div>
+        <div class="gm-info">
+          <div class="gm-name">${esc(u.username)}${isMe
+            ? ' <span class="gm-you">вы</span>' : ''}</div>
+          <div class="gm-status">${icon} ${esc(u.status || 'Онлайн')}</div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 /* ══════════════════════════════════════════════════
