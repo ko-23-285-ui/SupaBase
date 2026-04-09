@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StudyRoom — Учёба</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ═══════════════════ ПЕРЕМЕННЫЕ ═══════════════════ */
+    :root {
+      --bg:       #080810;
+      --bg2:      #0f0f1c;
+      --bg3:      #16162a;
+      --border:   rgba(255,255,255,0.07);
+      --border2:  rgba(255,255,255,0.12);
+      --accent:   #6c63ff;
+      --accent2:  #ff6584;
+      --accent3:  #43e97b;
+      --gold:     #ffd700;
+      --silver:   #c0c0c0;
+      --bronze:   #cd7f32;
+      --text:     #eeeeff;
+      --text2:    #7070a0;
+      --text3:    #404060;
+      --r:        14px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+    body::before {
+      content:'';
+      position:fixed;
+      inset:0;
+      background-image:
+        linear-gradient(rgba(108,99,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(108,99,255,.025) 1px, transparent 1px);
+      background-size:40px 40px;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    /* ═══════════════════ ХЕДЕР ═══════════════════ */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(8,8,16,.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header-right { display:flex; align-items:center; gap:14px; }
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 5px 14px 5px 5px;
+    }
+    .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .btn-exit {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text2);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-exit:hover { border-color:var(--accent2); color:var(--accent2); }
+
+    /* ═══════════════════ СЕТКА ═══════════════════ */
+    .grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 300px 1fr 280px;
+      gap: 20px;
+      padding: 24px 28px;
+      max-width: 1380px;
+      margin: 0 auto;
+      align-items: start;
+    }
+    @media(max-width:1100px){
+      .grid { grid-template-columns:280px 1fr; }
+      .right-col { grid-column:span 2; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    }
+    @media(max-width:680px){
+      .grid { grid-template-columns:1fr; padding:14px; }
+      .right-col { grid-column:auto; grid-template-columns:1fr; }
+    }
+
+    /* ═══════════════════ КАРТОЧКИ ═══════════════════ */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+    }
+    .card-hd {
+      padding: 15px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-icon {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .card-badge {
+      margin-left: auto;
+      background: rgba(67,233,123,.12);
+      border: 1px solid rgba(67,233,123,.25);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 11px;
+      color: var(--accent3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .pulse {
+      width: 6px; height: 6px;
+      background: var(--accent3);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; }
+      50%      { opacity:.4; }
+    }
+
+    /* ═══════════════════ СЕССИЯ (левый блок) ═══════════════════ */
+    .session-body { padding: 20px 18px; }
+    .timer-wrap { text-align:center; margin-bottom:20px; }
+    .timer-label {
+      font-size: 11px;
+      color: var(--text2);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .timer-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 50px;
+      font-weight: 800;
+      color: var(--accent3);
+      letter-spacing: -2px;
+      text-shadow: 0 0 30px rgba(67,233,123,.4);
+      transition: color .3s;
+    }
+    .timer-value.paused { color: var(--text2); text-shadow:none; }
+
+    /* Кнопки */
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      margin-bottom: 8px;
+    }
+    .btn:last-child { margin-bottom:0; }
+    .btn-start  { background:linear-gradient(135deg,var(--accent),#8b7fff); color:#fff; box-shadow:0 4px 18px rgba(108,99,255,.35); }
+    .btn-start:hover { transform:translateY(-1px); box-shadow:0 8px 28px rgba(108,99,255,.5); }
+    .btn-stop   { background:linear-gradient(135deg,#ff4d6d,var(--accent2)); color:#fff; box-shadow:0 4px 18px rgba(255,77,109,.3); }
+    .btn-stop:hover { transform:translateY(-1px); }
+    .btn-pause  { background:rgba(255,209,102,.12); color:#ffd166; border:1px solid rgba(255,209,102,.3); }
+    .btn-pause:hover { background:rgba(255,209,102,.2); }
+    .btn-ghost  { background:var(--bg3); color:var(--text2); border:1px solid var(--border); }
+    .btn-ghost:hover { color:var(--text); }
+    .btn-row    { display:flex; gap:8px; }
+    .btn-row .btn { flex:1; }
+
+    /* Достижения */
+    .badges-section {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .badges-label {
+      font-size: 11px;
+      color: var(--text2);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .badges-grid { display:flex; flex-wrap:wrap; gap:7px; }
+    .badge {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 5px 9px;
+      font-size: 11px;
+      color: var(--text2);
+      display: flex; align-items: center; gap: 4px;
+      transition: all .3s;
+      cursor: default;
+    }
+    .badge.earned {
+      background: rgba(108,99,255,.15);
+      border-color: rgba(108,99,255,.4);
+      color: #c0bfff;
+    }
+    .badge.pop { animation: badgePop .5s cubic-bezier(.16,1,.3,1); }
+    @keyframes badgePop {
+      0% { transform:scale(.5); opacity:0; }
+      70%{ transform:scale(1.2); }
+      100%{ transform:scale(1); opacity:1; }
+    }
+
+    /* ═══════════════════ ЧАТ ═══════════════════ */
+    .chat-card { display:flex; flex-direction:column; height:580px; }
+    .chat-msgs {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bg3) transparent;
+    }
+    .msg {
+      padding: 7px 11px;
+      border-radius: 9px;
+      animation: msgIn .2s ease;
+    }
+    @keyframes msgIn {
+      from { opacity:0; transform:translateY(4px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .msg.own { background:rgba(108,99,255,.1); border-left:2px solid var(--accent); }
+    .msg-name { font-size:11px; font-weight:600; color:var(--accent); margin-bottom:2px; }
+    .msg.own .msg-name { color:#b0b0ff; }
+    .msg-text { font-size:13px; line-height:1.5; }
+    .msg-time { font-size:10px; color:var(--text2); margin-top:2px; }
+    .chat-input-wrap {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .chat-input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .chat-input:focus { border-color:var(--accent); }
+    .chat-input::placeholder { color:var(--text2); }
+    .send-btn {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg,var(--accent),#8b7fff);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; flex-shrink:0;
+    }
+    .send-btn:hover { transform:scale(1.05); }
+    .send-btn svg { width:16px; height:16px; fill:#fff; }
+
+    /* ═══════════════════ ОНЛАЙН ═══════════════════ */
+    .online-list { padding:6px 8px 10px; }
+    .online-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 10px;
+      border-radius: 9px;
+      transition: background .15s;
+    }
+    .online-item:hover { background:var(--bg3); }
+    .online-av {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 2px solid rgba(67,233,123,.35);
+      background: linear-gradient(135deg,var(--accent),var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight:700; color:#fff;
+      overflow: hidden; flex-shrink:0;
+    }
+    .online-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .online-info { flex:1; min-width:0; }
+    .online-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .online-sub  { font-size:11px; color:var(--text2); }
+    .online-dot  { width:7px; height:7px; background:var(--accent3); border-radius:50%; animation:pulse 2s infinite; flex-shrink:0; }
+
+    /* ═══════════════════ РЕЙТИНГ ═══════════════════ */
+    .rating-list { padding:6px 8px 10px; }
+    .rating-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 10px;
+      border-radius: 9px;
+      transition: background .15s;
+    }
+    .rating-item:hover { background:var(--bg3); }
+    .rank-num {
+      width: 24px;
+      text-align: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px; font-weight:800;
+      flex-shrink:0;
+    }
+    .r1 { color:var(--gold); }
+    .r2 { color:var(--silver); }
+    .r3 { color:var(--bronze); }
+    .rN { color:var(--text2); font-size:12px; }
+    .rating-av {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,var(--accent),var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight:700; color:#fff;
+      overflow: hidden; flex-shrink:0;
+    }
+    .rating-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .rating-info { flex:1; min-width:0; }
+    .rating-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rating-time { font-size:11px; color:var(--text2); }
+    .bar-wrap { width:36px; height:4px; background:var(--bg3); border-radius:4px; overflow:hidden; flex-shrink:0; }
+    .bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:4px; transition:width .6s; }
+
+    /* ═══════════════════ ТОСТ ═══════════════════ */
+    .toasts {
+      position: fixed;
+      bottom: 20px; right: 20px;
+      z-index: 999;
+      display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--bg2);
+      border: 1px solid rgba(108,99,255,.4);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      animation: toastIn .4s cubic-bezier(.16,1,.3,1);
+      max-width: 300px;
+      pointer-events: all;
+    }
+    @keyframes toastIn {
+      from { opacity:0; transform:translateX(100%); }
+      to   { opacity:1; transform:translateX(0); }
+    }
+    .toast-icon { font-size:22px; }
+    .toast-body { flex:1; }
+    .toast-title { font-size:12px; font-weight:700; color:#b0b0ff; margin-bottom:2px; }
+    .toast-text  { font-size:11px; color:var(--text2); }
+
+    /* ═══════════════════ УТИЛИТЫ ═══════════════════ */
+    .spinner {
+      width:18px; height:18px;
+      border:2px solid var(--border);
+      border-top-color:var(--accent);
+      border-radius:50%;
+      animation:spin .7s linear infinite;
+      margin:16px auto;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .empty { text-align:center; padding:20px 12px; font-size:12px; color:var(--text2); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ ХЕДЕР ══════════════ -->
+<header>
+  <div class="logo">📚 StudyRoom</div>
+  <div class="header-right">
+    <div class="user-chip">
+      <div class="avatar" id="hdr-av">?</div>
+      <span class="user-name" id="hdr-name">…</span>
+    </div>
+    <button class="btn-exit" onclick="logout()">Выйти</button>
+  </div>
+</header>
+
+<!-- ══════════════ ОСНОВНАЯ СЕТКА ══════════════ -->
+<div class="grid">
+
+  <!-- ── ЛЕВАЯ КОЛОНКА: СЕССИЯ ── -->
+  <div>
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon" style="background:rgba(67,233,123,.12)">⏱️</div>
+        <span class="card-title">Моя сессия</span>
+      </div>
+      <div class="session-body">
+        <div class="timer-wrap">
+          <div class="timer-label">Время в учёбе</div>
+          <div class="timer-value" id="timer">00:00:00</div>
+        </div>
+        <div id="session-btns"><!-- кнопки через JS --></div>
+        <div class="badges-section">
+          <div class="badges-label">Мои достижения</div>
+          <div class="badges-grid" id="badges-grid"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ЦЕНТР: ЧАТ ── -->
+  <div>
+    <div class="card chat-card">
+      <div class="card-hd">
+        <div class="card-icon" style="background:rgba(108,99,255,.12)">💬</div>
+        <span class="card-title">Общий чат</span>
+      </div>
+      <div class="chat-msgs" id="chat-msgs"><div class="spinner"></div></div>
+      <div class="chat-input-wrap">
+        <input class="chat-input" id="chat-inp" placeholder="Сообщение…" maxlength="500"
+               onkeydown="if(event.key==='Enter')sendMsg()"/>
+        <button class="send-btn" onclick="sendMsg()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ПРАВАЯ КОЛОНКА ── -->
+  <div class="right-col">
+
+    <!-- Кто онлайн -->
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon" style="background:rgba(67,233,123,.12)">🟢</div>
+        <span class="card-title">Онлайн</span>
+        <div class="card-badge">
+          <div class="pulse"></div>
+          <span id="online-cnt">0</span>
+        </div>
+      </div>
+      <div class="online-list" id="online-list"><div class="spinner"></div></div>
+    </div>
+
+    <!-- Топ студентов -->
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon" style="background:rgba(255,209,102,.12)">🏆</div>
+        <span class="card-title">Топ студентов</span>
+      </div>
+      <div class="rating-list" id="rating-list"><div class="spinner"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ТОСТЫ -->
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   КОНФИГУРАЦИЯ — ваши ключи из Supabase
+   ══════════════════════════════════════════════════ */
+const SUPABASE_URL  = 'https://fzekwtotuljnqfnevsfv.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_FqyHx6wafe1-0E6aGBD0qQ_Lw1AQFmb';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* ── Базовый путь для GitHub Pages ──
+   Пример: https://user.github.io/studyroom/app.html
+   → getBaseUrl() вернёт https://user.github.io/studyroom/ */
+function getBaseUrl() {
+  const path = window.location.pathname;
+  const base = path.substring(0, path.lastIndexOf('/') + 1);
+  return window.location.origin + base;
+}
+
+/* ══════════════════════════════════════════════════
+   ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+   ══════════════════════════════════════════════════ */
+let me        = null;   // объект пользователя (auth)
+let myProfile = null;   // профиль из таблицы profiles
+let sessionId = null;   // ID текущей сессии в БД
+let sessStart = null;   // когда началась сессия (Date.now())
+let totalPausedMs = 0;  // суммарное время на паузе (мс)
+let pauseStart    = null;
+let isPaused      = false;
+let timerTick     = null;
+let heartTick     = null;
+let chatSub       = null;   // Realtime-подписка чата
+let chatMsgCount  = 0;      // счётчик наших сообщений
+
+/* ══════════════════════════════════════════════════
+   ДОСТИЖЕНИЯ
+   ══════════════════════════════════════════════════ */
+const ACHIEVEMENTS = [
+  {
+    id:   'early_bird',
+    icon: '🐦',
+    name: 'Ранняя пташка',
+    desc: 'Зашёл до 08:00',
+    check: (_p, s) => new Date().getHours() < 8
+  },
+  {
+    id:   'night_owl',
+    icon: '🦉',
+    name: 'Ночная сова',
+    desc: 'Учился после 23:00',
+    check: (_p, s) => new Date().getHours() >= 23
+  },
+  {
+    id:   'first_step',
+    icon: '👣',
+    name: 'Первый шаг',
+    desc: 'Завершил первую сессию',
+    check: (_p, s) => s.totalSessions >= 1
+  },
+  {
+    id:   'marathon',
+    icon: '🏃',
+    name: 'Марафонец',
+    desc: 'Учился более 2 часов подряд',
+    check: (_p, s) => s.sessionSec >= 7200
+  },
+  {
+    id:   'half_marathon',
+    icon: '🚶',
+    name: 'Полумарафон',
+    desc: 'Учился более 1 часа подряд',
+    check: (_p, s) => s.sessionSec >= 3600
+  },
+  {
+    id:   'activist',
+    icon: '💬',
+    name: 'Активист',
+    desc: '20 сообщений в чате',
+    check: (_p, s) => s.chatMsgs >= 20
+  },
+  {
+    id:   'chatty',
+    icon: '🗣️',
+    name: 'Болтун',
+    desc: 'Первые 5 сообщений в чате',
+    check: (_p, s) => s.chatMsgs >= 5
+  },
+  {
+    id:   'dedicated',
+    icon: '⭐',
+    name: 'Усердный',
+    desc: 'Суммарно 5+ часов обучения',
+    check: (_p, s) => s.totalSec >= 18000
+  },
+  {
+    id:   'consistent',
+    icon: '🔥',
+    name: 'Постоянный',
+    desc: 'Суммарно 2+ часа обучения',
+    check: (_p, s) => s.totalSec >= 7200
+  },
+];
+
+/* ══════════════════════════════════════════════════
+   ЗАПУСК
+   ══════════════════════════════════════════════════ */
+async function init() {
+  /* Проверяем авторизацию */
+  const { data:{ session } } = await sb.auth.getSession();
+  if (!session) {
+    window.location.href = getBaseUrl() + 'index.html';
+    return;
+  }
+  me = session.user;
+
+  /* Создаём/обновляем профиль в БД */
+  myProfile = await upsertProfile();
+
+  /* Обновляем хедер */
+  renderHeader();
+
+  /* Параллельно запускаем все компоненты */
+  await Promise.all([
+    loadChat(),
+    loadBadges(),
+    refreshOnline(),
+    refreshRating(),
+  ]);
+
+  renderSessionBtns();
+
+  /* Heartbeat — обновляем last_seen каждые 30 сек */
+  await heartbeat();
+  heartTick = setInterval(heartbeat, 30_000);
+
+  /* Realtime: слушаем новые сообщения в чате */
+  subscribeChat();
+
+  /* Онлайн обновляем каждые 30 сек */
+  setInterval(refreshOnline, 30_000);
+
+  /* Рейтинг — каждые 5 минут */
+  setInterval(refreshRating, 300_000);
+}
+
+/* ══════════════════════════════════════════════════
+   ПРОФИЛЬ
+   ══════════════════════════════════════════════════ */
+async function upsertProfile() {
+  const meta = me.user_metadata || {};
+  const { data } = await sb.from('profiles').upsert({
+    id:         me.id,
+    username:   meta.full_name || meta.name || me.email?.split('@')[0] || 'Студент',
+    avatar_url: meta.avatar_url || meta.picture || null,
+    last_seen:  new Date().toISOString(),
+  }, { onConflict: 'id' }).select().single();
+  return data;
+}
+
+async function heartbeat() {
+  if (!me) return;
+  await sb.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', me.id);
+}
+
+/* ══════════════════════════════════════════════════
+   ХЕДЕР
+   ══════════════════════════════════════════════════ */
+function renderHeader() {
+  const name   = myProfile?.username || me?.email || 'Студент';
+  const avatar = myProfile?.avatar_url;
+  document.getElementById('hdr-name').textContent = name;
+  const avEl = document.getElementById('hdr-av');
+  if (avatar) {
+    avEl.innerHTML = `<img src="${avatar}" alt="">`;
+  } else {
+    avEl.textContent = (name[0] || '?').toUpperCase();
+  }
+}
+
+async function logout() {
+  if (sessionId) await endSession();
+  clearInterval(timerTick);
+  clearInterval(heartTick);
+  if (chatSub) chatSub.unsubscribe();
+  await sb.auth.signOut();
+  window.location.href = getBaseUrl() + 'index.html';
+}
+
+/* ══════════════════════════════════════════════════
+   СЕССИЯ — управление таймером
+   ══════════════════════════════════════════════════ */
+async function startSession() {
+  sessStart     = Date.now();
+  totalPausedMs = 0;
+  isPaused      = false;
+
+  const { data } = await sb.from('study_sessions').insert({
+    user_id:    me.id,
+    started_at: new Date(sessStart).toISOString(),
+  }).select().single();
+
+  sessionId = data?.id;
+  timerTick = setInterval(tickTimer, 1000);
+  renderSessionBtns();
+}
+
+async function endSession() {
+  clearInterval(timerTick);
+  if (!sessionId) return;
+
+  const elapsed = Math.floor(((Date.now() - sessStart) - totalPausedMs) / 1000);
+
+  await sb.from('study_sessions').update({
+    ended_at: new Date().toISOString(),
+    duration: elapsed,
+  }).eq('id', sessionId);
+
+  sessionId     = null;
+  sessStart     = null;
+  isPaused      = false;
+  totalPausedMs = 0;
+
+  document.getElementById('timer').textContent = '00:00:00';
+  document.getElementById('timer').classList.remove('paused');
+
+  renderSessionBtns();
+  refreshRating();
+  await checkAchievements();
+}
+
+function togglePause() {
+  if (isPaused) {
+    totalPausedMs += Date.now() - pauseStart;
+    isPaused   = false;
+    pauseStart = null;
+    timerTick  = setInterval(tickTimer, 1000);
+    document.getElementById('timer').classList.remove('paused');
+  } else {
+    pauseStart = Date.now();
+    isPaused   = true;
+    clearInterval(timerTick);
+    document.getElementById('timer').classList.add('paused');
+  }
+  renderSessionBtns();
+}
+
+function tickTimer() {
+  if (!sessStart) return;
+  const elapsed = Math.floor(((Date.now() - sessStart) - totalPausedMs) / 1000);
+  const h = Math.floor(elapsed / 3600);
+  const m = Math.floor((elapsed % 3600) / 60);
+  const s = elapsed % 60;
+  document.getElementById('timer').textContent =
+    `${pad(h)}:${pad(m)}:${pad(s)}`;
+  if (elapsed > 0 && elapsed % 60 === 0) checkAchievements();
+}
+
+function renderSessionBtns() {
+  const el = document.getElementById('session-btns');
+  if (!sessionId) {
+    el.innerHTML = `<button class="btn btn-start" onclick="startSession()">▶ Начать сессию</button>`;
+  } else if (isPaused) {
+    el.innerHTML = `
+      <button class="btn btn-start" onclick="togglePause()">▶ Продолжить</button>
+      <button class="btn btn-stop"  onclick="endSession()">⏹ Завершить</button>`;
+  } else {
+    el.innerHTML = `
+      <div class="btn-row">
+        <button class="btn btn-pause" onclick="togglePause()">⏸ Перерыв</button>
+        <button class="btn btn-ghost" onclick="logout()">Выход</button>
+      </div>
+      <button class="btn btn-stop" onclick="endSession()">⏹ Завершить сессию</button>`;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   ЧАТ
+   ══════════════════════════════════════════════════ */
+async function loadChat() {
+  const { data } = await sb.from('chat_messages')
+    .select('id, content, created_at, user_id, profiles(username, avatar_url)')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const msgs = (data || []).reverse();
+  const el   = document.getElementById('chat-msgs');
+
+  if (!msgs.length) {
+    el.innerHTML = '<div class="empty">Пока нет сообщений. Напишите первым!</div>';
+    return;
+  }
+  el.innerHTML = msgs.map(renderMsg).join('');
+  el.scrollTop = el.scrollHeight;
+
+  chatMsgCount = msgs.filter(m => m.user_id === me?.id).length;
+}
+
+function renderMsg(m) {
+  const own  = m.user_id === me?.id;
+  const name = m.profiles?.username || 'Студент';
+  const time = new Date(m.created_at).toLocaleTimeString('ru', { hour:'2-digit', minute:'2-digit' });
+  return `
+    <div class="msg ${own ? 'own' : ''}">
+      <div class="msg-name">${esc(name)}</div>
+      <div class="msg-text">${esc(m.content)}</div>
+      <div class="msg-time">${time}</div>
+    </div>`;
+}
+
+async function sendMsg() {
+  const inp  = document.getElementById('chat-inp');
+  const text = inp.value.trim();
+  if (!text || !me) return;
+  inp.value = '';
+
+  await sb.from('chat_messages').insert({ user_id: me.id, content: text });
+  chatMsgCount++;
+  checkAchievements();
+}
+
+function subscribeChat() {
+  chatSub = sb.channel('chat-live')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'chat_messages' },
+      async (payload) => {
+        const { data: profile } = await sb.from('profiles')
+          .select('username, avatar_url')
+          .eq('id', payload.new.user_id)
+          .single();
+
+        const msg = { ...payload.new, profiles: profile };
+        const el  = document.getElementById('chat-msgs');
+        if (el.querySelector('.empty')) el.innerHTML = '';
+        el.insertAdjacentHTML('beforeend', renderMsg(msg));
+        el.scrollTop = el.scrollHeight;
+      })
+    .subscribe();
+}
+
+/* ══════════════════════════════════════════════════
+   ФУНКЦИЯ 1: getOnlineUsers()
+   Выбираем пользователей, чей last_seen < 5 минут назад.
+   Это сработает только если в таблице profiles включён RLS
+   с разрешением SELECT для всех.
+   ══════════════════════════════════════════════════ */
+async function getOnlineUsers() {
+  const since = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const { data } = await sb.from('profiles')
+    .select('id, username, avatar_url, last_seen')
+    .gt('last_seen', since)
+    .order('last_seen', { ascending: false });
+  return data || [];
+}
+
+async function refreshOnline() {
+  const users = await getOnlineUsers();
+  document.getElementById('online-cnt').textContent = users.length;
+  const el = document.getElementById('online-list');
+
+  if (!users.length) {
+    el.innerHTML = '<div class="empty">Пока никого онлайн</div>';
+    return;
+  }
+  el.innerHTML = users.map(u => {
+    const initials = initials2(u.username);
+    const ago = timeAgo(u.last_seen);
+    return `
+      <div class="online-item">
+        <div class="online-av">${u.avatar_url ? `<img src="${u.avatar_url}" alt="">` : initials}</div>
+        <div class="online-info">
+          <div class="online-name">${esc(u.username)}</div>
+          <div class="online-sub">${ago}</div>
+        </div>
+        <div class="online-dot"></div>
+      </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   ФУНКЦИЯ 2: getTopStudents()
+   Суммируем duration по всем завершённым сессиям для
+   каждого пользователя и сортируем по убыванию.
+   ══════════════════════════════════════════════════ */
+async function getTopStudents() {
+  const { data: sessions } = await sb.from('study_sessions')
+    .select('user_id, duration')
+    .not('ended_at', 'is', null);
+
+  /* Агрегируем суммарное время по user_id */
+  const totals = {};
+  for (const s of (sessions || [])) {
+    totals[s.user_id] = (totals[s.user_id] || 0) + (s.duration || 0);
+  }
+
+  const top10 = Object.entries(totals)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10);
+
+  if (!top10.length) return [];
+
+  const ids = top10.map(([uid]) => uid);
+  const { data: profiles } = await sb.from('profiles')
+    .select('id, username, avatar_url')
+    .in('id', ids);
+
+  return top10.map(([uid, total], i) => {
+    const p = (profiles || []).find(p => p.id === uid);
+    return { rank: i + 1, id: uid, username: p?.username || 'Студент',
+             avatar_url: p?.avatar_url || null, totalSec: total };
+  });
+}
+
+async function refreshRating() {
+  const students = await getTopStudents();
+  const el = document.getElementById('rating-list');
+
+  if (!students.length) {
+    el.innerHTML = '<div class="empty">Нет завершённых сессий</div>';
+    return;
+  }
+
+  const medals = ['🥇','🥈','🥉'];
+  const maxSec = students[0].totalSec || 1;
+
+  el.innerHTML = students.map(s => {
+    const rankClass = s.rank <= 3 ? `r${s.rank}` : 'rN';
+    const rankStr   = s.rank <= 3 ? medals[s.rank - 1] : s.rank;
+    const bar       = Math.round((s.totalSec / maxSec) * 100);
+    const initials  = initials2(s.username);
+    return `
+      <div class="rating-item">
+        <div class="rank-num ${rankClass}">${rankStr}</div>
+        <div class="rating-av">${s.avatar_url ? `<img src="${s.avatar_url}" alt="">` : initials}</div>
+        <div class="rating-info">
+          <div class="rating-name">${esc(s.username)}</div>
+          <div class="rating-time">${fmtTime(s.totalSec)}</div>
+        </div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${bar}%"></div></div>
+      </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   ДОСТИЖЕНИЯ
+   ══════════════════════════════════════════════════ */
+async function loadBadges() {
+  const { data } = await sb.from('user_achievements')
+    .select('achievement_id')
+    .eq('user_id', me.id);
+
+  const earned = new Set((data || []).map(d => d.achievement_id));
+  renderBadges(earned);
+}
+
+function renderBadges(earned) {
+  document.getElementById('badges-grid').innerHTML =
+    ACHIEVEMENTS.map(a => `
+      <div class="badge ${earned.has(a.id) ? 'earned' : ''}" title="${a.desc}" id="bdg-${a.id}">
+        ${a.icon} ${a.name}
+      </div>`).join('');
+}
+
+async function checkAchievements() {
+  if (!me) return;
+
+  const sessionSec = sessStart
+    ? Math.floor(((Date.now() - sessStart) - totalPausedMs) / 1000)
+    : 0;
+
+  const { data: sessions } = await sb.from('study_sessions')
+    .select('duration')
+    .eq('user_id', me.id)
+    .not('ended_at', 'is', null);
+
+  const totalSec      = (sessions || []).reduce((s, r) => s + (r.duration || 0), 0);
+  const totalSessions = (sessions || []).length;
+  const stats         = { sessionSec, totalSec, totalSessions, chatMsgs: chatMsgCount };
+
+  const { data: existing } = await sb.from('user_achievements')
+    .select('achievement_id').eq('user_id', me.id);
+  const earned = new Set((existing || []).map(d => d.achievement_id));
+
+  for (const ach of ACHIEVEMENTS) {
+    if (!earned.has(ach.id) && ach.check(myProfile, stats)) {
+      await sb.from('user_achievements').insert({
+        user_id: me.id, achievement_id: ach.id,
+      });
+      earned.add(ach.id);
+
+      const bdg = document.getElementById(`bdg-${ach.id}`);
+      if (bdg) bdg.classList.add('earned', 'pop');
+
+      showToast(ach);
+    }
+  }
+}
+
+function showToast(ach) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `
+    <div class="toast-icon">${ach.icon}</div>
+    <div class="toast-body">
+      <div class="toast-title">Новое достижение!</div>
+      <div class="toast-text">${ach.name} — ${ach.desc}</div>
+    </div>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+/* ══════════════════════════════════════════════════
+   УТИЛИТЫ
+   ══════════════════════════════════════════════════ */
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function fmtTime(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  return h > 0 ? `${h}ч ${m}мин` : m > 0 ? `${m} мин` : `${sec} сек`;
+}
+
+function timeAgo(iso) {
+  const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (s < 60) return 'только что';
+  if (s < 120) return '1 мин назад';
+  return `${Math.floor(s / 60)} мин назад`;
+}
+
+function initials2(name) {
+  return (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ══════════════════════════════════════════════════
+   СТАРТ
+   ══════════════════════════════════════════════════ */
+init();
+</script>
+</body>
+</html>
