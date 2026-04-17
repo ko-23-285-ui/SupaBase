@@ -476,6 +476,135 @@
     }
     .gm-status { font-size: 11px; color: var(--text2); margin-top: 1px; }
 
+    /* ═══════════════════ СТАТИСТИКА ПОЛЬЗОВАТЕЛЯ ═══════════════════ */
+    .stats-body { padding: 16px 18px 18px; }
+    .stats-period {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .period-btn {
+      flex: 1;
+      padding: 5px 0;
+      border-radius: 7px;
+      border: 1px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text2);
+      font-size: 11px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .period-btn.active {
+      background: rgba(108,99,255,.15);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .stat-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .stat-box-label { font-size: 10px; color: var(--text2); letter-spacing:.08em; text-transform:uppercase; margin-bottom:4px; }
+    .stat-box-value { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:var(--accent3); line-height:1; }
+    .stat-box-value.purple { color: var(--accent); }
+    .stat-box-value.pink   { color: var(--accent2); }
+    .stat-box-value.yellow { color: #ffd166; }
+    .stats-bar-wrap {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+    }
+    .stats-bar-label { font-size:11px; color:var(--text2); margin-bottom:8px; display:flex; justify-content:space-between; }
+    .bar-track { height:6px; background:var(--bg); border-radius:6px; overflow:hidden; }
+    .bar-progress {
+      height:100%;
+      border-radius:6px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width .8s cubic-bezier(.16,1,.3,1);
+    }
+
+    /* ═══════════════════ УВЕДОМЛЕНИЯ ═══════════════════ */
+    .notif-bell {
+      position: relative;
+      width: 36px; height: 36px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+    .notif-bell:hover { border-color: var(--accent); }
+    .notif-badge {
+      position: absolute;
+      top: -4px; right: -4px;
+      width: 16px; height: 16px;
+      background: var(--accent2);
+      border-radius: 50%;
+      font-size: 9px;
+      font-weight: 700;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      animation: badgePop .3s cubic-bezier(.16,1,.3,1);
+    }
+    .notif-panel {
+      position: fixed;
+      top: 64px; right: 20px;
+      width: 320px;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      box-shadow: 0 16px 48px rgba(0,0,0,.6);
+      z-index: 200;
+      overflow: hidden;
+      display: none;
+    }
+    .notif-panel.open { display: block; animation: slideDown .2s ease; }
+    @keyframes slideDown {
+      from { opacity:0; transform:translateY(-8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .notif-hd {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .notif-hd-title { font-size:13px; font-weight:700; }
+    .notif-mark-all {
+      font-size:11px; color:var(--accent); cursor:pointer; background:none; border:none;
+      font-family:'DM Sans',sans-serif; transition: opacity .2s;
+    }
+    .notif-mark-all:hover { opacity:.7; }
+    .notif-list { max-height:340px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--bg3) transparent; }
+    .notif-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+      cursor: default;
+    }
+    .notif-item:last-child { border-bottom:none; }
+    .notif-item:hover { background: var(--bg3); }
+    .notif-item.unread { background: rgba(108,99,255,.06); }
+    .notif-icon { font-size:20px; flex-shrink:0; margin-top:1px; }
+    .notif-body { flex:1; min-width:0; }
+    .notif-text { font-size:12px; color:var(--text); line-height:1.4; }
+    .notif-time { font-size:10px; color:var(--text2); margin-top:3px; }
+    .notif-dot { width:6px; height:6px; background:var(--accent); border-radius:50%; flex-shrink:0; margin-top:5px; }
+    .notif-empty { text-align:center; padding:24px 16px; font-size:12px; color:var(--text2); }
+
     /* ═══════════════════ УТИЛИТЫ ═══════════════════ */
     .spinner {
       width:18px; height:18px;
@@ -500,8 +629,24 @@
       <span class="user-name" id="hdr-name">…</span>
     </div>
     <button class="btn-exit" onclick="logout()">Выйти</button>
+    <!-- Колокольчик уведомлений -->
+    <div class="notif-bell" id="notif-bell" onclick="toggleNotifPanel()">
+      🔔
+      <div class="notif-badge" id="notif-badge" style="display:none">0</div>
+    </div>
   </div>
 </header>
+
+<!-- Панель уведомлений -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-hd">
+    <span class="notif-hd-title">🔔 Уведомления</span>
+    <button class="notif-mark-all" onclick="markAllRead()">Прочитать все</button>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div class="spinner"></div>
+  </div>
+</div>
 
 <!-- ══════════════ ОСНОВНАЯ СЕТКА ══════════════ -->
 <div class="grid">
@@ -600,6 +745,33 @@
       <div class="rating-list" id="rating-list"><div class="spinner"></div></div>
     </div>
 
+    <!-- Моя статистика -->
+    <div class="card" style="grid-column:span 2;">
+      <div class="card-hd">
+        <div class="card-icon" style="background:rgba(67,233,123,.12)">📊</div>
+        <span class="card-title">Моя статистика</span>
+      </div>
+      <div class="stats-body">
+        <div class="stats-period">
+          <button class="period-btn active" data-period="week"  onclick="switchPeriod('week')">Неделя</button>
+          <button class="period-btn"        data-period="month" onclick="switchPeriod('month')">Месяц</button>
+          <button class="period-btn"        data-period="all"   onclick="switchPeriod('all')">Всё время</button>
+        </div>
+        <div class="stats-grid" id="stats-grid">
+          <div class="spinner" style="grid-column:span 2;"></div>
+        </div>
+        <div class="stats-bar-wrap" id="stats-bar-wrap" style="display:none">
+          <div class="stats-bar-label">
+            <span>До следующего уровня</span>
+            <span id="stats-bar-pct">0%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-progress" id="stats-bar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -627,17 +799,19 @@ function getBaseUrl() {
 /* ══════════════════════════════════════════════════
    ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
    ══════════════════════════════════════════════════ */
-let me        = null;   // объект пользователя (auth)
-let myProfile = null;   // профиль из таблицы profiles
-let sessionId = null;   // ID текущей сессии в БД
-let sessStart = null;   // когда началась сессия (Date.now())
-let totalPausedMs = 0;  // суммарное время на паузе (мс)
+let me        = null;
+let myProfile = null;
+let sessionId = null;
+let sessStart = null;
+let totalPausedMs = 0;
 let pauseStart    = null;
 let isPaused      = false;
 let timerTick     = null;
 let heartTick     = null;
-let chatSub       = null;   // Realtime-подписка чата
-let chatMsgCount  = 0;      // счётчик наших сообщений
+let chatSub       = null;
+let chatMsgCount  = 0;
+let notifOpen     = false;   // панель уведомлений открыта?
+let statsPeriod   = 'week';  // текущий период статистики
 
 /* ══════════════════════════════════════════════════
    ДОСТИЖЕНИЯ
@@ -733,6 +907,8 @@ async function init() {
     refreshOnline(),
     refreshRating(),
     refreshGroupMonitor(),
+    loadUserStats('week'),      /* Функция 5: статистика */
+    loadNotifications(),        /* Функция 6: уведомления */
   ]);
 
   renderSessionBtns();
@@ -744,6 +920,9 @@ async function init() {
   /* Realtime: слушаем новые сообщения в чате */
   subscribeChat();
 
+  /* Realtime: слушаем новые уведомления */
+  subscribeNotifications();
+
   /* Онлайн обновляем каждые 30 сек */
   setInterval(refreshOnline, 30_000);
 
@@ -752,7 +931,13 @@ async function init() {
 
   /* Рейтинг — каждые 5 минут */
   setInterval(refreshRating, 300_000);
-}
+
+  /* Закрываем панель уведомлений по клику вне неё */
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#notif-panel') && !e.target.closest('#notif-bell')) {
+      closeNotifPanel();
+    }
+  });
 
 /* ══════════════════════════════════════════════════
    ПРОФИЛЬ
@@ -1218,6 +1403,205 @@ async function refreshGroupMonitor() {
         </div>
       </div>`;
   }).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   ФУНКЦИЯ 5: loadUserStats(period) — СТАТИСТИКА
+   ──────────────────────────────────────────────────
+   КАК РАБОТАЕТ:
+   Делает SELECT из study_sessions только для
+   текущего пользователя, фильтруя по дате начала
+   (за неделю, месяц или всё время). Считает:
+   — суммарное время учёбы
+   — количество завершённых сессий
+   — среднюю длину одной сессии
+   — процент прогресса до следующего «уровня»
+
+   Таблица в Supabase: study_sessions
+   Поля: user_id, started_at, duration, ended_at
+   ══════════════════════════════════════════════════ */
+async function loadUserStats(period) {
+  if (!me) return;
+
+  /* Определяем дату начала периода */
+  const now   = new Date();
+  let since   = null;
+  if (period === 'week') {
+    since = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  } else if (period === 'month') {
+    since = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+  }
+  /* period === 'all' → since остаётся null, фильтр не применяем */
+
+  /* Запрос к Supabase — только наши завершённые сессии */
+  let query = sb.from('study_sessions')
+    .select('duration, started_at')
+    .eq('user_id', me.id)
+    .not('ended_at', 'is', null);   /* только завершённые */
+
+  if (since) query = query.gte('started_at', since);  /* gte = >= (greater or equal) */
+
+  const { data: sessions, error } = await query;
+  if (error) { console.error('loadUserStats:', error); return; }
+
+  /* Вычисляем метрики */
+  const count   = (sessions || []).length;
+  const totalSec = (sessions || []).reduce((s, r) => s + (r.duration || 0), 0);
+  const avgSec  = count > 0 ? Math.floor(totalSec / count) : 0;
+
+  /* Уровни: каждые 10 часов = новый уровень */
+  const LEVEL_SEC = 36000;   /* 10 часов */
+  const pct = Math.min(100, Math.round((totalSec % LEVEL_SEC) / LEVEL_SEC * 100));
+  const level = Math.floor(totalSec / LEVEL_SEC) + 1;
+
+  /* Рендерим карточки */
+  const grid = document.getElementById('stats-grid');
+  grid.innerHTML = `
+    <div class="stat-box">
+      <div class="stat-box-label">Время учёбы</div>
+      <div class="stat-box-value">${fmtTime(totalSec)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-label">Сессий</div>
+      <div class="stat-box-value purple">${count}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-label">Средняя сессия</div>
+      <div class="stat-box-value pink">${avgSec > 0 ? fmtTime(avgSec) : '—'}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-label">Уровень</div>
+      <div class="stat-box-value yellow">LVL ${level}</div>
+    </div>`;
+
+  /* Прогресс-бар до следующего уровня */
+  const barWrap = document.getElementById('stats-bar-wrap');
+  barWrap.style.display = 'block';
+  document.getElementById('stats-bar-pct').textContent = pct + '%';
+  setTimeout(() => {
+    document.getElementById('stats-bar').style.width = pct + '%';
+  }, 50);
+}
+
+function switchPeriod(period) {
+  statsPeriod = period;
+  document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.period === period);
+  });
+  loadUserStats(period);
+}
+
+/* ══════════════════════════════════════════════════
+   ФУНКЦИЯ 6: loadNotifications() — УВЕДОМЛЕНИЯ
+   ──────────────────────────────────────────────────
+   КАК РАБОТАЕТ:
+   Читает таблицу notifications из Supabase —
+   список событий адресованных текущему пользователю
+   (получил значок, кто-то зашёл онлайн и т.д.).
+   Новые уведомления (is_read = false) считаются
+   и показываются на значке колокольчика.
+
+   Realtime-подписка делает так, что новые
+   уведомления появляются мгновенно без перезагрузки.
+
+   Таблица в Supabase: notifications
+   Поля: id, user_id, type, text, is_read, created_at
+   ══════════════════════════════════════════════════ */
+async function loadNotifications() {
+  if (!me) return;
+
+  const { data, error } = await sb.from('notifications')
+    .select('id, type, text, is_read, created_at')
+    .eq('user_id', me.id)
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (error) {
+    /* Таблица ещё не создана — показываем подсказку */
+    document.getElementById('notif-list').innerHTML =
+      `<div class="notif-empty">Создайте таблицу notifications<br>из файла setup.sql</div>`;
+    return;
+  }
+
+  renderNotifications(data || []);
+}
+
+function renderNotifications(items) {
+  const unread = items.filter(n => !n.is_read).length;
+
+  /* Значок с количеством */
+  const badge = document.getElementById('notif-badge');
+  if (unread > 0) {
+    badge.style.display = 'flex';
+    badge.textContent   = unread > 9 ? '9+' : unread;
+  } else {
+    badge.style.display = 'none';
+  }
+
+  const list = document.getElementById('notif-list');
+  if (!items.length) {
+    list.innerHTML = '<div class="notif-empty">Уведомлений пока нет</div>';
+    return;
+  }
+
+  const TYPE_ICONS = {
+    achievement: '🎖️',
+    session:     '⏱️',
+    chat:        '💬',
+    online:      '🟢',
+    system:      '📢',
+  };
+
+  list.innerHTML = items.map(n => `
+    <div class="notif-item ${n.is_read ? '' : 'unread'}" id="notif-${n.id}">
+      <div class="notif-icon">${TYPE_ICONS[n.type] || '📌'}</div>
+      <div class="notif-body">
+        <div class="notif-text">${esc(n.text)}</div>
+        <div class="notif-time">${timeAgo(n.created_at)}</div>
+      </div>
+      ${n.is_read ? '' : '<div class="notif-dot"></div>'}
+    </div>`).join('');
+}
+
+/* Пометить все как прочитанные — UPDATE в Supabase */
+async function markAllRead() {
+  if (!me) return;
+  await sb.from('notifications')
+    .update({ is_read: true })
+    .eq('user_id', me.id)
+    .eq('is_read', false);
+
+  /* Обновляем UI без запроса */
+  document.querySelectorAll('.notif-item.unread').forEach(el => {
+    el.classList.remove('unread');
+    el.querySelector('.notif-dot')?.remove();
+  });
+  document.getElementById('notif-badge').style.display = 'none';
+}
+
+/* Realtime: новые уведомления появляются мгновенно */
+function subscribeNotifications() {
+  sb.channel('notif-live')
+    .on('postgres_changes', {
+      event:  'INSERT',
+      schema: 'public',
+      table:  'notifications',
+      filter: `user_id=eq.${me.id}`,   /* только наши */
+    }, (payload) => {
+      loadNotifications();   /* перезагружаем весь список */
+    })
+    .subscribe();
+}
+
+/* Открыть/закрыть панель */
+function toggleNotifPanel() {
+  notifOpen = !notifOpen;
+  document.getElementById('notif-panel').classList.toggle('open', notifOpen);
+  if (notifOpen) loadNotifications();
+}
+function closeNotifPanel() {
+  notifOpen = false;
+  document.getElementById('notif-panel').classList.remove('open');
 }
 
 /* ══════════════════════════════════════════════════
